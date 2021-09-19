@@ -54,7 +54,7 @@ char separator = ':';
 String wifiInfo;
 
 // Hosting data
-const char* host = "192.168.0.197:1880"; // computer IP
+const char* host = "192.168.0.199:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
 
@@ -123,6 +123,29 @@ void getDataFromSdCard()
     // if the file didn't open, print an error:
     Serial.println("error opening wifi.txt");
   }
+}
+
+void connect_to_Wifi()
+{
+  getDataFromSdCard();
+  delay(2000);
+
+  WiFi.persistent(false);
+  WiFi.mode(WIFI_OFF);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(ssid, password);
+
+  unsigned long wifiConnectStart = millis();
+
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("WiFi соединение установлено");
+  Serial.println("IP адрес: ");
+  Serial.println(WiFi.localIP());
+  Serial.println();
 }
 
 void read_sensors()
@@ -214,15 +237,35 @@ void send_request()
   http.begin(client, fullUrl); 
   http.addHeader("Content-Type", "application/json");
   auto httpCode = http.POST(postData); 
-  Serial.println(httpCode); //Print HTTP return code 
+  
+  if (httpCode > 0) {
+    if (httpCode == HTTP_CODE_OK) {
+      Serial.println("Data was successfully sended!");
+    } else {
+      Serial.println("Failed to send data");
+    }
+  } else {
+    Serial.println("Failed to connect to Node-Red");
+    return;
+  }
+
   String response = http.getString(); 
   Serial.println(response); //Print request response payload 
-  http.end(); //Close connection Serial.println(); 
-  Serial.println("closing connection"); 
+  http.end(); //Close connection 
+  Serial.println("closing connection");
+  delay(2000);
+  ESP.deepSleep(60000000); //deep sleep на минуту
 }
 
 void setup(void)
 { 
+  // Инициализация последовательного порта
+  Serial.begin(9600);
+  delay(500);
+
+  // Connect D0 to RST to wake up
+  pinMode(D0, WAKEUP_PULLUP);
+
   sensors.begin();
   dht.begin();
   pinMode(LED_BUILTIN, OUTPUT);
@@ -231,54 +274,64 @@ void setup(void)
     Serial.println("Could not find BMP180 or BMP085 sensor at 0x77");
     while (1) {}
   }
-  
-  // Инициализация последовательного порта
-  Serial.begin(9600);
-  delay(500);
-  
-  getDataFromSdCard();
-  delay(2000);
 
   // Инициализация соединения WiFi
-  Serial.println("Try to connect");
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
+  connect_to_Wifi();
+  // Serial.println("Try to connect");
+  // WiFi.mode(WIFI_STA);
+  // WiFi.begin(ssid, password);
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(500);
+  //   Serial.print(".");
+  // }
+  // Serial.println("");
+  // Serial.println("WiFi connected");
+  // // Вывод IP адреса платы в терминал
+  // Serial.println(WiFi.localIP());
+
+  // read_sensors();
+  // send_request();
+}
+
+void loop(){
+  bool toReconnect = false;
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("Нет соединения WiFi");
+    toReconnect = true;
   }
-  Serial.println("");
-  Serial.println("WiFi connected");
-  // Вывод IP адреса платы в терминал
-  Serial.println(WiFi.localIP());
+
+  if (toReconnect) {
+    connect_to_Wifi();
+  }
 
   read_sensors();
   send_request();
-  //ESP.deepSleep(600000000); // на 10 минут
 }
 
-void loop() {
+// void loop() {
 
-  currentMillis = millis();
-  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
+//   currentMillis = millis();
+//   digitalWrite(LED_BUILTIN, HIGH);   // turn the LED on (HIGH is the voltage level)
   
-  if (currentMillis - previousMillis >= LONG_INTERVAL) 
-  {
-    previousMillis = currentMillis;
-    read_sensors();
-    send_request();   
-  }
+//   if (currentMillis - previousMillis >= LONG_INTERVAL) 
+//   {
+//     previousMillis = currentMillis;
+//     read_sensors();
+//     send_request();   
+//   }
 
-  if (currentMillis - previousMillisReadSensors >= SHORT_INTERVAL)
-  {
-    previousMillisReadSensors = currentMillis;
-    read_sensors();
-  }
+//   if (currentMillis - previousMillisReadSensors >= SHORT_INTERVAL)
+//   {
+//     previousMillisReadSensors = currentMillis;
+//     read_sensors();
+//   }
   
-  if (previousMillis > currentMillis)
-  {
-    // prevent overload unsigned long
-    previousMillis = currentMillis;
-    previousMillisReadSensors = currentMillis;
-  }
-}
+//   if (previousMillis > currentMillis)
+//   {
+//     // prevent overload unsigned long
+//     previousMillis = currentMillis;
+//     previousMillisReadSensors = currentMillis;
+//   }
+// }
