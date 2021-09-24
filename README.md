@@ -4,7 +4,7 @@ Monitoring system of educational institutions based on IoT sensors (Wemos D1 &am
 ### Backlog Wemos
 
 - ✅ Configuration WiFi through SD-card
-- ⬜ DeepSleep mode
+- ✅ DeepSleep mode
 - ⬜ Sending current battery voltage in request
 - ✅ Archive data to SD-card when http request failed;
 - ✅ Implement temperature sensors
@@ -12,7 +12,9 @@ Monitoring system of educational institutions based on IoT sensors (Wemos D1 &am
 - ✅ Implement pressure sensor
 - ⬜ Dividing a project into submodules
 - ✅ Send HTTP request with data to Node-RED
-- ⬜ Add current time to request body
+- ⬜ Send wifi data through Serial monitor
+- ⬜ Parse archived data and send to Node-RED
+- ⬜ Read device serial number on SD-card
 
 ### Backlog Node-RED
 
