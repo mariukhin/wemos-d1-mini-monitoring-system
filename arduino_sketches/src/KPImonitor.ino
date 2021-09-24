@@ -12,15 +12,7 @@
 #define DHTPIN D4     // what pin we're connected to
 #define DHTTYPE DHT11   // DHT 11
 #define ONE_WIRE_BUS D2
-//#define LONG_INTERVAL 30000
-//#define SHORT_INTERVAL 10000
-#define LONG_INTERVAL 600000
-#define SHORT_INTERVAL 60000
-
-long interval = LONG_INTERVAL;
-unsigned long currentMillis = 0;
-unsigned long previousMillis = 0;
-unsigned long previousMillisReadSensors = 0;
+#define DEEP_SLEEP_INTERVAL 600
 
 String Area = "alias"; // alias for searching device in Database
 WiFiClient client;
@@ -48,8 +40,8 @@ DHT dht(DHTPIN, DHTTYPE);
 float h, t, prev_h = 0, prev_t = 0;
 
 // Параметры вашей сети WiFi
-String ssid = "admin";
-String password = "admin";
+String ssid = "atep";
+String password = "";
 char separator = ':';
 String wifiInfo;
 
@@ -145,8 +137,6 @@ void connect_to_Wifi()
   WiFi.mode(WIFI_STA);
   WiFi.begin(ssid, password);
 
-  unsigned long wifiConnectStart = millis();
-
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
@@ -220,7 +210,8 @@ void read_sensors()
 void send_request()
 {
   Serial.print("Requesting URL: "); 
-  Serial.println(url); //Post Data 
+  Serial.println(url); //Post Data
+
   String postData = "{\"humidity\":";
   postData += (int)h;
   postData += ",\"temp\":";
@@ -265,8 +256,6 @@ void send_request()
   Serial.println(response); //Print request response payload 
   http.end(); //Close connection 
   Serial.println("closing connection");
-  delay(2000);
-  // ESP.deepSleep(60000000); //deep sleep на минуту
 }
 
 void setup(void)
@@ -275,13 +264,10 @@ void setup(void)
   Serial.begin(9600);
   delay(500);
 
-  // Connect D0 to RST to wake up
-  // pinMode(D0, WAKEUP_PULLUP);
-
   sensors.begin();
   dht.begin();
   pinMode(LED_BUILTIN, OUTPUT);
-  digitalWrite(LED_BUILTIN, HIGH);   // turn the LED off (HIGH is the voltage level)
+  digitalWrite(LED_BUILTIN, LOW);   // turn the LED on
 
   if (!bmp.begin()) {
     Serial.println("Could not find BMP180 or BMP085 sensor at 0x77");
@@ -292,46 +278,10 @@ void setup(void)
 
   read_sensors();
   send_request();
+
+  delay(2000);
+  ESP.deepSleep(DEEP_SLEEP_INTERVAL * 1000000); //deep sleep на 10 минут
 }
 
-// void loop(){
-//   bool toReconnect = false;
-//   digitalWrite(LED_BUILTIN, HIGH);
-
-//   if (WiFi.status() != WL_CONNECTED) {
-//     Serial.println("Нет соединения WiFi");
-//     toReconnect = true;
-//   }
-
-//   if (toReconnect) {
-//     connect_to_Wifi();
-//   }
-
-//   read_sensors();
-//   send_request();
-// }
-
-void loop() {
-
-  currentMillis = millis();
-  
-  if (currentMillis - previousMillis >= LONG_INTERVAL) 
-  {
-    previousMillis = currentMillis;
-    read_sensors();
-    send_request();   
-  }
-
-  if (currentMillis - previousMillisReadSensors >= SHORT_INTERVAL)
-  {
-    previousMillisReadSensors = currentMillis;
-    read_sensors();
-  }
-  
-  if (previousMillis > currentMillis)
-  {
-    // prevent overload unsigned long
-    previousMillis = currentMillis;
-    previousMillisReadSensors = currentMillis;
-  }
+void loop(){
 }
