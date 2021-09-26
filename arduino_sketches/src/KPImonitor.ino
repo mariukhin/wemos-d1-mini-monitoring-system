@@ -17,7 +17,6 @@
 String Area = "alias"; // alias for searching device in Database
 WiFiClient client;
 
-
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
 // Pass our oneWire reference to Dallas Temperature. 
@@ -42,11 +41,12 @@ float h, t, prev_h = 0, prev_t = 0;
 // Параметры вашей сети WiFi
 String ssid = "atep";
 String password = "";
+String serialNumber = "000000";
 char separator = ':';
 String wifiInfo;
 
 // Hosting data
-const char* host = "192.168.0.199:1880"; // computer IP
+const char* host = "192.168.0.198:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
 
@@ -80,17 +80,12 @@ void initializeSdCard()
 
 void writeDataToSdCard(String postData)
 {
-  initializeSdCard();
-
-  // open the file. note that only one file can be open at a time,
-  // so you have to close this one before opening another.
   myFile = SD.open("data.txt", FILE_WRITE);
 
   // if the file opened okay, write to it:
   if (myFile) {
     Serial.print("Writing to data.txt...");
     myFile.println(postData);
-    // close the file:
     myFile.close();
     Serial.println("done.");
   } else {
@@ -119,11 +114,47 @@ void getDataFromSdCard()
     logVal.trim();
     ssid = logVal;
     String pass = getValue(wifiInfo, separator, 2);
-    pass.trim();  
-    password = pass;
+    pass.trim();
+    String passVal = getValue(pass, '\n', 0);
+    passVal.trim();
+    password = passVal;
+    String ser = getValue(wifiInfo, separator, 3);
+    ser.trim();
+    serialNumber = ser;
   } else {
     // if the file didn't open, print an error:
     Serial.println("error opening wifi.txt");
+  }
+}
+
+void send_request(String data);
+void sendParsedDataToNodeRed()
+{
+  String parsedData;
+
+  // re-open the file for reading:
+  myFile = SD.open("data.txt");
+  if (myFile) {
+    while (myFile.available()) {
+      char data = myFile.read();
+      parsedData.concat(data);
+    }
+    // close the file:
+    myFile.close();
+
+    for (int i = 0; i < parsedData.length(); i++)
+    {
+      String item = getValue(parsedData, '\n', i);
+      if (item.equals("")) {
+        break;
+      } else {
+        send_request(item);
+        delay(5000);
+      }
+    }
+    SD.remove("data.txt");
+  } else {
+    Serial.println("error opening data.txt");
   }
 }
 
@@ -207,28 +238,33 @@ void read_sensors()
     Serial.println(" *C\t");
 }
 
-void send_request()
+void send_request(String data = "0")
 {
+  String postData;
   Serial.print("Requesting URL: "); 
   Serial.println(url); //Post Data
 
-  String postData = "{\"humidity\":";
-  postData += (int)h;
-  postData += ",\"temp\":";
-  postData += dallasTemp;
-  postData += ",\"temp_dht\":";
-  postData += t;
-  postData += ",\"temp_bpm\":";
-  postData += bmpTemp;
-  postData += ",\"pressure\":";
-  postData += bmpPressure;
-  postData += ",\"voltage\":";
-  postData += voltage;
-  postData += ",\"device_alias\":";
-  postData += "\"" + Area + "\"";
-  postData += ",\"pw\":";
-  postData += "\"atepmonitor\"";
-  postData += "}";
+  if (data != "0") {
+    postData = data;
+  } else {
+    postData = "{\"humidity\":";
+    postData += (int)h;
+    postData += ",\"temp\":";
+    postData += dallasTemp;
+    postData += ",\"temp_dht\":";
+    postData += t;
+    postData += ",\"temp_bpm\":";
+    postData += bmpTemp;
+    postData += ",\"pressure\":";
+    postData += bmpPressure;
+    postData += ",\"voltage\":";
+    postData += voltage;
+    postData += ",\"device_alias\":";
+    postData += "\"" + Area + "\"";
+    postData += ",\"device_number\":";
+    postData += serialNumber;
+    postData += "}";
+  }
   
   String address = host + url; 
   Serial.println(address);
@@ -242,6 +278,10 @@ void send_request()
   if (httpCode > 0) {
     if (httpCode == HTTP_CODE_OK) {
       Serial.println("Data was successfully sended!");
+
+      if(data == "0"){
+        sendParsedDataToNodeRed();
+      }
     } else {
       Serial.println("Failed to send data");
       writeDataToSdCard(postData);
@@ -252,8 +292,6 @@ void send_request()
     return;
   }
 
-  String response = http.getString(); 
-  Serial.println(response); //Print request response payload 
   http.end(); //Close connection 
   Serial.println("closing connection");
 }
