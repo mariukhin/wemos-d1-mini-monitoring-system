@@ -13,8 +13,8 @@ Monitoring system of educational institutions based on IoT sensors (Wemos D1 &am
 - ⬜ Dividing a project into submodules
 - ✅ Send HTTP request with data to Node-RED
 - ⬜ Send wifi data through Serial monitor
-- ⬜ Parse archived data and send to Node-RED
-- ⬜ Read device serial number on SD-card
+- ✅ Parse archived data and send to Node-RED
+- ✅ Read device serial number on SD-card
 
 ### Backlog Node-RED
 
