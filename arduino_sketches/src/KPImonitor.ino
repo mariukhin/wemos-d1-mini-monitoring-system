@@ -8,13 +8,13 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Adafruit_BMP085.h>
+#include <Arduino_JSON.h>
 
 #define DHTPIN D4     // what pin we're connected to
 #define DHTTYPE DHT11   // DHT 11
 #define ONE_WIRE_BUS D2
 #define DEEP_SLEEP_INTERVAL 600
 
-String Area = "alias"; // alias for searching device in Database
 WiFiClient client;
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
@@ -238,32 +238,49 @@ void read_sensors()
     Serial.println(" *C\t");
 }
 
+String getTime()
+{
+  HTTPClient http;
+
+  String url = "http://worldtimeapi.org/api/timezone/Europe/Kiev";
+  http.begin(client, url);
+  auto result = http.GET();
+  String payload = "{}";
+  delay(1000);
+
+  if (result > 0) {
+    Serial.print(result);
+    payload = http.getString();
+  } else {
+    Serial.println("Failed to get date");
+  }
+  http.end(); //Close connection
+
+  JSONVar myObject = JSON.parse(payload);
+  String time = (const char*) myObject["utc_datetime"];
+  return time;
+}
+
 void send_request(String data = "0")
 {
   String postData;
   Serial.print("Requesting URL: "); 
   Serial.println(url); //Post Data
+  String time = getTime();
 
   if (data != "0") {
     postData = data;
   } else {
-    postData = "{\"humidity\":";
-    postData += (int)h;
-    postData += ",\"temp\":";
-    postData += dallasTemp;
-    postData += ",\"temp_dht\":";
-    postData += t;
-    postData += ",\"temp_bpm\":";
-    postData += bmpTemp;
-    postData += ",\"pressure\":";
-    postData += bmpPressure;
-    postData += ",\"voltage\":";
-    postData += voltage;
-    postData += ",\"device_alias\":";
-    postData += "\"" + Area + "\"";
-    postData += ",\"device_number\":";
-    postData += serialNumber;
-    postData += "}";
+    JSONVar jsonData;
+    jsonData["humidity"] = (int)h;
+    jsonData["temp"] = dallasTemp;
+    jsonData["temp_dht"] = t;
+    jsonData["temp_bpm"] = bmpTemp;
+    jsonData["pressure"] = bmpPressure;
+    jsonData["voltage"] = voltage;
+    jsonData["time"] = time;
+    jsonData["device_number"] = serialNumber;
+    postData = JSON.stringify(jsonData);
   }
   
   String address = host + url; 
