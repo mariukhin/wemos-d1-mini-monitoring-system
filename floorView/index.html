@@ -5,14 +5,30 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Floor View</title>
-    <style>
-        body {
-            width: 100vh;
-            height: 100vh;
-        }
-    </style>
 </head>
 <body>
-    <object data="floor.svg"></object>
+    <object data="floor.svg" id="floorsvg"></object>
 </body>
+<script type="text/javascript">
+    const ids = ['701', '702', '703', '704', '705', '706', '707', '708', '709', '710'];
+    const colors = [
+        { title: "freeze", fill: '#0A3AFC'},
+        { title: "cold", fill: '#2996FE'}, 
+        { title: "normal", fill: '#FFFFFF'},
+        { title: "hot", fill: '#FCB60A'},
+        { title: "heat", fill: '#FC240A'},
+    ];
+
+    function setColorToRoom(roomId, color) {
+        let svgItem = document.getElementById('floorsvg');
+        svgItem.addEventListener('load', () => {
+            let svgDoc = svgItem.contentDocument;
+            let currentRoom = svgDoc.getElementById(roomId);
+            currentRoom.setAttribute("fill", color.fill);
+        });
+    }
+
+    setColorToRoom("705", colors.find(item => item.title === "freeze"));
+    setColorToRoom("701", colors.find(item => item.title === "cold"));
+</script>
 </html>
