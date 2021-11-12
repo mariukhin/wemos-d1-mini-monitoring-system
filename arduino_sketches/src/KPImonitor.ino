@@ -44,9 +44,10 @@ String password = "";
 String serialNumber = "000000";
 char separator = ':';
 String wifiInfo;
+bool isWifiConnectionFailed = false;
 
 // Hosting data
-const char* host = "192.168.0.198:1880"; // computer IP
+const char* host = "192.168.0.200:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
 
@@ -171,12 +172,18 @@ void connect_to_Wifi()
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    if (WiFi.status() == WL_NO_SSID_AVAIL || WiFi.status() == WL_CONNECT_FAILED) {
+      isWifiConnectionFailed = true;
+      break;
+    }
   }
 
-  Serial.println("WiFi соединение установлено");
-  Serial.println("IP адрес: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("WiFi connected");
+    Serial.println("IP address: ");
+    Serial.println(WiFi.localIP());
+    Serial.println();
+  }
 }
 
 void read_sensors()
@@ -334,9 +341,32 @@ void setup(void)
   read_sensors();
   send_request();
 
-  delay(2000);
-  ESP.deepSleep(DEEP_SLEEP_INTERVAL * 1000000); //deep sleep на 10 минут
+  if (isWifiConnectionFailed) {
+    Serial.println("Please enter your wifi credentials below");
+  }
+
+  // delay(2000);
+  // ESP.deepSleep(DEEP_SLEEP_INTERVAL * 1000000); //deep sleep на 10 минут
 }
 
 void loop(){
+    if (isWifiConnectionFailed) {
+      Serial.print("Enter wifi name:");
+      while (Serial.available() == 0) {}
+      ssid = "";
+      String wifiName = Serial.readString();
+      ssid = wifiName;
+      Serial.println("Your wifi name" + ssid);
+      Serial.print("Enter wifi password");
+      while (Serial.available() == 0) {}
+      String wifiPassword = Serial.readString();
+      password = wifiPassword;
+      Serial.println("Your wifi password" + password);
+      delay(1000);
+      
+      connect_to_Wifi();
+      read_sensors();
+      send_request();
+      while (Serial.available() == 0) {}
+    }
 }
