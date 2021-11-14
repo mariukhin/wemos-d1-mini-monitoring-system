@@ -4,7 +4,7 @@ Monitoring system of educational institutions based on IoT sensors (Wemos D1 &am
 ### Backlog Wemos
 
 - ✅ Configuration WiFi through SD-card
-- ✅ DeepSleep mode
+- ✅ LightSleep mode (unable to use DeepSleep without reseting pins)
 - ⬜ Sending current battery voltage in request
 - ✅ Archive data to SD-card when http request failed;
 - ✅ Implement temperature sensors
