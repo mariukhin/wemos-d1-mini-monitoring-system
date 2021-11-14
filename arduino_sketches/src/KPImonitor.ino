@@ -1,4 +1,7 @@
 // Импортируем библиотеку поддержки ESP8266
+extern "C" {
+  #include <user_interface.h>
+}
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h> 
 #include <DHT.h> // For temperature and humidity sensor 
@@ -13,7 +16,7 @@
 #define DHTPIN D4     // what pin we're connected to
 #define DHTTYPE DHT11   // DHT 11
 #define ONE_WIRE_BUS D2
-#define DEEP_SLEEP_INTERVAL 600
+#define DEEP_SLEEP_INTERVAL 600 // s/10min
 
 WiFiClient client;
 
@@ -50,6 +53,9 @@ const char* host = "192.168.0.200:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
 
+static const uint32_t SLEEP_CHUNK = 268000; // 268 sec.
+static uint32_t remains;
+
 String getValue(String data, char separator, int index)
 {
   int found = 0;
@@ -65,6 +71,36 @@ String getValue(String data, char separator, int index)
   }
 
   return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
+}
+
+static void wakeup() {
+  if (remains <= SLEEP_CHUNK) { // Last iteration
+    wifi_fpm_close();
+  }
+}
+
+void sleep(uint32_t ms) {
+  uint8_t optmode;
+
+  wifi_station_disconnect();
+  optmode = wifi_get_opmode();
+  if (optmode != NULL_MODE)
+    wifi_set_opmode_current(NULL_MODE);
+  wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
+  wifi_fpm_open();
+  wifi_fpm_set_wakeup_cb(wakeup);
+  remains = ms;
+  while (remains > 0) {
+    if (remains > SLEEP_CHUNK)
+      ms = SLEEP_CHUNK;
+    else
+      ms = remains;
+    wifi_fpm_do_sleep(ms * 1000);
+    delay(ms);
+    remains -= ms;
+  }
+  if (optmode != NULL_MODE)
+    wifi_set_opmode_current(optmode);
 }
 
 void initializeSdCard()
@@ -330,15 +366,13 @@ void setup(void)
     Serial.println("Could not find BMP180 or BMP085 sensor at 0x77");
     while (1) {}
   }
+}
 
+void loop(){
   connect_to_Wifi();   // Инициализация соединения WiFi
 
   read_sensors();
   send_request();
 
-  // delay(2000);
-  // ESP.deepSleep(DEEP_SLEEP_INTERVAL * 1000000); //deep sleep на 10 минут
-}
-
-void loop(){
+  sleep(DEEP_SLEEP_INTERVAL * 1000);
 }
