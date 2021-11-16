@@ -1,7 +1,4 @@
 // Импортируем библиотеку поддержки ESP8266
-extern "C" {
-  #include <user_interface.h>
-}
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h> 
 #include <DHT.h> // For temperature and humidity sensor 
@@ -12,6 +9,9 @@ extern "C" {
 #include <SD.h>
 #include <Adafruit_BMP085.h>
 #include <Arduino_JSON.h>
+#include <LightSleepModule.h>
+#include <ServiceModule.h>
+#include <SDcardModule.h>
 
 #define DHTPIN D4     // what pin we're connected to
 #define DHTTYPE DHT11   // DHT 11
@@ -30,7 +30,6 @@ Adafruit_BMP085 bmp;
 float bmpTemp;
 int bmpPressure;
 
-const int chipSelect = D8;
 File myFile;
 
 //Analog input
@@ -41,127 +40,12 @@ float voltage;
 DHT dht(DHTPIN, DHTTYPE);
 float h, t, prev_h = 0, prev_t = 0;
 
-// Параметры вашей сети WiFi
-String ssid = "atep";
-String password = "";
-String serialNumber = "000000";
-char separator = ':';
-String wifiInfo;
+struct WifiDataAndSerialNumber wifiData;
 
 // Hosting data
 const char* host = "192.168.0.200:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
-
-static const uint32_t SLEEP_CHUNK = 268000; // 268 sec.
-static uint32_t remains;
-
-String getValue(String data, char separator, int index)
-{
-  int found = 0;
-  int strIndex[] = {0, -1};
-  int maxIndex = data.length()-1;
-
-  for(int i=0; i<=maxIndex && found<=index; i++){
-    if(data.charAt(i)==separator || i==maxIndex){
-        found++;
-        strIndex[0] = strIndex[1]+1;
-        strIndex[1] = (i == maxIndex) ? i+1 : i;
-    }
-  }
-
-  return found>index ? data.substring(strIndex[0], strIndex[1]) : "";
-}
-
-static void wakeup() {
-  if (remains <= SLEEP_CHUNK) { // Last iteration
-    wifi_fpm_close();
-  }
-}
-
-void sleep(uint32_t ms) {
-  uint8_t optmode;
-
-  wifi_station_disconnect();
-  optmode = wifi_get_opmode();
-  if (optmode != NULL_MODE)
-    wifi_set_opmode_current(NULL_MODE);
-  wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
-  wifi_fpm_open();
-  wifi_fpm_set_wakeup_cb(wakeup);
-  remains = ms;
-  while (remains > 0) {
-    if (remains > SLEEP_CHUNK)
-      ms = SLEEP_CHUNK;
-    else
-      ms = remains;
-    wifi_fpm_do_sleep(ms * 1000);
-    delay(ms);
-    remains -= ms;
-  }
-  if (optmode != NULL_MODE)
-    wifi_set_opmode_current(optmode);
-}
-
-void initializeSdCard()
-{
-  Serial.print("Initializing SD card...");
-
-  if (!SD.begin(chipSelect)) {
-    Serial.println("Card failed, or not present");
-    return;
-  }
-  Serial.println("initialization done.");
-}
-
-void writeDataToSdCard(String postData)
-{
-  myFile = SD.open("data.txt", FILE_WRITE);
-
-  // if the file opened okay, write to it:
-  if (myFile) {
-    Serial.print("Writing to data.txt...");
-    myFile.println(postData);
-    myFile.close();
-    Serial.println("done.");
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening wifi.txt");
-  }
-}
-
-void getDataFromSdCard()
-{
-  initializeSdCard();
-
-  // re-open the file for reading:
-  myFile = SD.open("wifi.txt");
-  if (myFile) {
-    // read from the file until there's nothing else in it:
-    while (myFile.available()) {
-      char data = myFile.read();
-      wifiInfo.concat(data);
-    }
-    // close the file:
-    myFile.close();
-    String login = getValue(wifiInfo, separator, 1);
-    login.trim();
-    String logVal = getValue(login, '\n', 0);
-    logVal.trim();
-    ssid = logVal;
-    String pass = getValue(wifiInfo, separator, 2);
-    pass.trim();
-    String passVal = getValue(pass, '\n', 0);
-    passVal.trim();
-    password = passVal;
-    String ser = getValue(wifiInfo, separator, 3);
-    ser.trim();
-    serialNumber = ser;
-  } else {
-    // if the file didn't open, print an error:
-    Serial.println("error opening wifi.txt");
-  }
-}
 
 void send_request(String data);
 void sendParsedDataToNodeRed()
@@ -196,13 +80,13 @@ void sendParsedDataToNodeRed()
 
 void connect_to_Wifi()
 {
-  getDataFromSdCard();
+  wifiData = getDataFromSdCard(myFile);
   delay(2000);
 
   WiFi.persistent(false);
   WiFi.mode(WIFI_OFF);
   WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
+  WiFi.begin(wifiData.login, wifiData.password);
 
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
@@ -276,35 +160,12 @@ void read_sensors()
     Serial.println(" *C\t");
 }
 
-String getTime()
-{
-  HTTPClient http;
-
-  String url = "http://worldtimeapi.org/api/timezone/Europe/Kiev";
-  http.begin(client, url);
-  auto result = http.GET();
-  String payload = "{}";
-  delay(1000);
-
-  if (result > 0) {
-    Serial.print(result);
-    payload = http.getString();
-  } else {
-    Serial.println("Failed to get date");
-  }
-  http.end(); //Close connection
-
-  JSONVar myObject = JSON.parse(payload);
-  String time = (const char*) myObject["utc_datetime"];
-  return time;
-}
-
 void send_request(String data = "0")
 {
   String postData;
   Serial.print("Requesting URL: "); 
   Serial.println(url); //Post Data
-  String time = getTime();
+  String time = getTime(client);
 
   if (data != "0") {
     postData = data;
@@ -317,7 +178,7 @@ void send_request(String data = "0")
     jsonData["pressure"] = bmpPressure;
     jsonData["voltage"] = voltage;
     jsonData["time"] = time;
-    jsonData["device_number"] = serialNumber;
+    jsonData["device_number"] = wifiData.serialNumber;
     postData = JSON.stringify(jsonData);
   }
   
@@ -339,11 +200,11 @@ void send_request(String data = "0")
       }
     } else {
       Serial.println("Failed to send data");
-      writeDataToSdCard(postData);
+      writeDataToSdCard(myFile, postData);
     }
   } else {
     Serial.println("Failed to connect to Node-Red");
-    writeDataToSdCard(postData);
+    writeDataToSdCard(myFile, postData);
     return;
   }
 
