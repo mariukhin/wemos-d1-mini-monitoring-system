@@ -7,6 +7,12 @@ const int chipSelect = D8;
 char separator = ':';
 String wifiInfo;
 
+struct WifiDataAndSerialNumber {
+  String login;
+  String password;
+  String serialNumber;
+};
+
 void initializeSdCard()
 {
   Serial.print("Initializing SD card...");
@@ -38,7 +44,7 @@ struct WifiDataAndSerialNumber getDataFromSdCard(File myFile)
 {
   initializeSdCard();
 
-  struct WifiDataAndSerialNumber data;
+  struct WifiDataAndSerialNumber wifiData;
 
   // re-open the file for reading:
   myFile = SD.open("wifi.txt");
@@ -54,19 +60,19 @@ struct WifiDataAndSerialNumber getDataFromSdCard(File myFile)
     login.trim();
     String logVal = getValue(login, '\n', 0);
     logVal.trim();
-    data.login = logVal;
+    wifiData.login = logVal;
     String pass = getValue(wifiInfo, separator, 2);
     pass.trim();
     String passVal = getValue(pass, '\n', 0);
     passVal.trim();
-    data.password = passVal;
+    wifiData.password = passVal;
     String ser = getValue(wifiInfo, separator, 3);
     ser.trim();
-    data.serialNumber = ser;
-    return data;
+    wifiData.serialNumber = ser;
+    return wifiData;
   } else {
     // if the file didn't open, print an error:
     Serial.println("error opening wifi.txt");
-    return data;
+    return wifiData;
   }
 }
