@@ -2,8 +2,7 @@
 #define __SDCARDMODULE_H
 #include <SD.h>
 
-void initializeSdCard();
-void writeDataToSdCard(File myFile, String postData);
-struct WifiDataAndSerialNumber getDataFromSdCard(File myFile);
+void writeDataToSdCard(File, String);
+struct WifiDataAndSerialNumber getDataFromSdCard(File);
 
 #endif

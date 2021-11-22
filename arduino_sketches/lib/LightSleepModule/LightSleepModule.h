@@ -3,6 +3,6 @@
 
 #include <inttypes.h>
 
-void sleep(uint32_t ms);
+void sleep(uint32_t);
 
 #endif

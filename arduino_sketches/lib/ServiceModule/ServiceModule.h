@@ -4,7 +4,7 @@
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
 
-String getValue(String data, char separator, int index);
-String getTime(WiFiClient client);
+String getValue(String, char, int);
+String getTime(WiFiClient);
 
 #endif

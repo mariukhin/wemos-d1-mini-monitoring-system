@@ -13,7 +13,7 @@ struct WifiDataAndSerialNumber {
   String serialNumber;
 };
 
-void initializeSdCard()
+static void initializeSdCard()
 {
   Serial.print("Initializing SD card...");
 
@@ -36,7 +36,7 @@ void writeDataToSdCard(File myFile, String postData)
     Serial.println("done.");
   } else {
     // if the file didn't open, print an error:
-    Serial.println("error opening wifi.txt");
+    Serial.println("error opening data.txt");
   }
 }
 
