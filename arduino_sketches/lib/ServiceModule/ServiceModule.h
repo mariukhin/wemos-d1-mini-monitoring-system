@@ -3,8 +3,9 @@
 
 #include <Arduino.h>
 #include <ESP8266WiFi.h>
+#include <SensorsModule.h>
 
-String getValue(String, char, int);
-String getTime(WiFiClient);
+String getValue(String data, char separator, int index);
+String getStringifiedData(SensorsData sensorsData, String serialNumber);
 
 #endif

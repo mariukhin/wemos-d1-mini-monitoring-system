@@ -1,6 +1,5 @@
 #ifndef __SDCARDMODULE_H
 #define __SDCARDMODULE_H
-#include <SD.h>
 
 struct WifiDataAndSerialNumber {
   String login;
@@ -8,7 +7,8 @@ struct WifiDataAndSerialNumber {
   String serialNumber;
 };
 
-void writeDataToSdCard(File, String);
-struct WifiDataAndSerialNumber getDataFromSdCard(File);
+void writeDataToSdCard(String);
+void sendParsedDataToNodeRed();
+struct WifiDataAndSerialNumber getDataFromSdCard();
 
 #endif

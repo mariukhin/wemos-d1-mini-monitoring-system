@@ -2,6 +2,9 @@
 #include <Arduino.h>
 #include "SDcardModule.h"
 #include "ServiceModule.h"
+#include "WiFiModule.h"
+
+File myFile;
 
 const int chipSelect = D8;
 char separator = ':';
@@ -18,7 +21,7 @@ static void initializeSdCard()
   Serial.println("initialization done.");
 }
 
-void writeDataToSdCard(File myFile, String postData)
+void writeDataToSdCard(String postData)
 {
   myFile = SD.open("data.txt", FILE_WRITE);
 
@@ -34,7 +37,37 @@ void writeDataToSdCard(File myFile, String postData)
   }
 }
 
-struct WifiDataAndSerialNumber getDataFromSdCard(File myFile)
+void sendParsedDataToNodeRed()
+{
+  String parsedData;
+
+  // re-open the file for reading:
+  myFile = SD.open("data.txt");
+  if (myFile) {
+    while (myFile.available()) {
+      char data = myFile.read();
+      parsedData.concat(data);
+    }
+    // close the file:
+    myFile.close();
+
+    for (int i = 0; i < parsedData.length(); i++)
+    {
+      String item = getValue(parsedData, '\n', i);
+      if (item.equals("")) {
+        break;
+      } else {
+        sendRequest(item, false);
+        delay(5000);
+      }
+    }
+    SD.remove("data.txt");
+  } else {
+    Serial.println("error opening data.txt");
+  }
+}
+
+struct WifiDataAndSerialNumber getDataFromSdCard()
 {
   initializeSdCard();
 
