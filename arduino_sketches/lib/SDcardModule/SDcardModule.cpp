@@ -7,12 +7,6 @@ const int chipSelect = D8;
 char separator = ':';
 String wifiInfo;
 
-struct WifiDataAndSerialNumber {
-  String login;
-  String password;
-  String serialNumber;
-};
-
 static void initializeSdCard()
 {
   Serial.print("Initializing SD card...");

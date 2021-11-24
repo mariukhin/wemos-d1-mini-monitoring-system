@@ -13,26 +13,11 @@ WiFiClient client;
 
 File myFile;
 
-struct WifiDataAndSerialNumber {
-  String login;
-  String password;
-  String serialNumber;
-};
-
-struct SensorsData {
-  float humidity;
-  float dhtTemp;
-  float dallasTemp;
-  float bmpTemp;
-  float pressure;
-  float voltage;
-};
-
 // WiFi default parameters
-struct WifiDataAndSerialNumber wifiDataAndSerialNum = { "atep", "", "000000" };
+struct WifiDataAndSerialNumber wifiDataAndSerialNum;
 
 // sensors data
-struct SensorsData sensorsData = { 0, 0, 0, 0, 0, 0 };
+struct SensorsData sensorsData;
 
 // Hosting data
 const char* host = "192.168.0.200:1880"; // computer IP
@@ -156,7 +141,7 @@ void loop(){
 
   connect_to_Wifi();  // initialize WiFi connection
 
-  sensorsData = read_sensors(); // read sensors data
+  sensorsData = readSensors(); // read sensors data
   send_request(); // send HTTP POST-request
 
   sleep(SLEEP_INTERVAL * 1000); // light-sleep for 10min

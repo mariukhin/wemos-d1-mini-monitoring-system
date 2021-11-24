@@ -1,5 +1,4 @@
-#include <DHT.h> // For temperature and humidity sensor 
-#include <DHT_U.h>  // For temperature and humidity sensor 
+#include <DHT_U.h> 
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Adafruit_BMP085.h>
@@ -23,15 +22,6 @@ int sensorValue;
 DHT dht(DHTPIN, DHTTYPE);
 float prev_h = 0, prev_t = 0;
 
-struct SensorsData {
-  float humidity;
-  float dhtTemp;
-  float dallasTemp;
-  float bmpTemp;
-  float pressure;
-  float voltage;
-};
-
 void setupSensors()
 {
   sensors.begin();
@@ -45,7 +35,7 @@ void setupSensors()
   }
 }
 
-struct SensorsData read_sensors()
+struct SensorsData readSensors()
 {
     struct SensorsData resultData;
     
