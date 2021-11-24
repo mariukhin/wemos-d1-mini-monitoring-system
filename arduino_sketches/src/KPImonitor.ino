@@ -25,7 +25,7 @@ void loop()
   wifiDataAndSerialNum = getDataFromSdCard();
   delay(2000);
 
-  connect_to_Wifi(wifiDataAndSerialNum.login, wifiDataAndSerialNum.password);  // initialize WiFi connection
+  connectToWifi(wifiDataAndSerialNum.login, wifiDataAndSerialNum.password);  // initialize WiFi connection
 
   String postData = getStringifiedData(readSensors(), wifiDataAndSerialNum.serialNumber); // get data to send in stringified JSON format
   sendRequest(postData, true); // send HTTP POST-request

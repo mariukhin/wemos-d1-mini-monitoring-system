@@ -2,7 +2,6 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Adafruit_BMP085.h>
-#include <Arduino.h>
 #include "SensorsModule.h"
 
 #define DHTPIN D4     // what pin we're connected to

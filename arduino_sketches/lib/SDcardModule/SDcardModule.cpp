@@ -6,12 +6,10 @@
 
 File myFile;
 
-const int chipSelect = D8;
-char separator = ':';
-String wifiInfo;
-
 static void initializeSdCard()
 {
+  const int chipSelect = D8;
+
   Serial.print("Initializing SD card...");
 
   if (!SD.begin(chipSelect)) {
@@ -72,6 +70,9 @@ struct WifiDataAndSerialNumber getDataFromSdCard()
   initializeSdCard();
 
   struct WifiDataAndSerialNumber wifiData;
+
+  String wifiInfo;
+  char separator = ':';
 
   // re-open the file for reading:
   myFile = SD.open("wifi.txt");

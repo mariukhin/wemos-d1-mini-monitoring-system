@@ -1,8 +1,8 @@
 #ifndef __LIGHTSLEEPMODULE_H
 #define __LIGHTSLEEPMODULE_H
 
-#include <inttypes.h>
+#include <Arduino.h>
 
-void sleep(uint32_t);
+void sleep(uint32_t ms);
 
 #endif

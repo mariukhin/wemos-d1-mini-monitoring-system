@@ -1,8 +1,6 @@
-#include <Arduino.h>
 #include <Arduino_JSON.h>
 #include <ESP8266HTTPClient.h>
 #include "ServiceModule.h"
-#include "SensorsModule.h"
 #include "WiFiModule.h"
 
 String getValue(String data, char separator, int index)

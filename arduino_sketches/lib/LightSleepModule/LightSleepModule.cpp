@@ -1,14 +1,13 @@
 extern "C" {
   #include <user_interface.h>
 }
-#include <Arduino.h>
 #include "LightSleepModule.h"
 
 static const uint32_t SLEEP_CHUNK = 268000;
 
 static uint32_t remains;
 
-static void wakeup() {
+static void wakeUp() {
   if (remains <= SLEEP_CHUNK) {
     wifi_fpm_close();
   }
@@ -23,7 +22,7 @@ void sleep(uint32_t ms) {
     wifi_set_opmode_current(NULL_MODE);
   wifi_fpm_set_sleep_type(LIGHT_SLEEP_T);
   wifi_fpm_open();
-  wifi_fpm_set_wakeup_cb(wakeup);
+  wifi_fpm_set_wakeup_cb(wakeUp);
   remains = ms;
   while (remains > 0) {
     if (remains > SLEEP_CHUNK)

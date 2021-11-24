@@ -3,7 +3,7 @@
 
 #include <Arduino.h>
 
-void connect_to_Wifi(String login, String password);
+void connectToWifi(String login, String password);
 String getTime();
 void sendRequest(String data, bool isMainRequest);
 

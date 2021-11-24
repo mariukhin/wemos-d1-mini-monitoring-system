@@ -7,7 +7,7 @@ struct WifiDataAndSerialNumber {
   String serialNumber;
 };
 
-void writeDataToSdCard(String);
+void writeDataToSdCard(String postData);
 void sendParsedDataToNodeRed();
 struct WifiDataAndSerialNumber getDataFromSdCard();
 

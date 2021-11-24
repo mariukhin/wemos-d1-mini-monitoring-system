@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <Arduino_JSON.h>
 #include <ESP8266WiFi.h>
 #include <ESP8266HTTPClient.h> 
@@ -12,7 +11,7 @@ const char* host = "192.168.0.200:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
 
-void connect_to_Wifi(String login, String password)
+void connectToWifi(String login, String password)
 {
   WiFi.persistent(false);
   WiFi.mode(WIFI_OFF);
@@ -31,7 +30,6 @@ void connect_to_Wifi(String login, String password)
     Serial.println();
   }
 }
-
 
 String getTime()
 {
