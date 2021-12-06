@@ -14,9 +14,6 @@ OneWire oneWire(ONE_WIRE_BUS);
 DallasTemperature sensors(&oneWire);
 Adafruit_BMP085 bmp;
 
-//Analog input
-int sensorValue;
-
 // DH11
 DHT dht(DHTPIN, DHTTYPE);
 float prev_h = 0, prev_t = 0;
@@ -39,7 +36,7 @@ struct SensorsData readSensors()
     struct SensorsData resultData;
     
     // read the input on analog pin 0:
-    sensorValue = analogRead(A0);
+    int sensorValue = analogRead(A0);
     // Convert the analog reading (which goes from 0 - 1023) to a voltage (0 - 3.2V):
     resultData.voltage = sensorValue * (3.2 / 1023.0)*((100.0+9.697)/9.697)*1.07;
     
@@ -72,7 +69,6 @@ struct SensorsData readSensors()
       Serial.println("Error: Could not read DallasTemperature data");
     }
     resultData.dallasTemp = (round(resultData.dallasTemp*10))/10.0;
-
 
     // Reading bmp temp and pressure
     resultData.bmpTemp = bmp.readTemperature();
