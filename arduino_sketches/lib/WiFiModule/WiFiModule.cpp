@@ -11,8 +11,10 @@ const char* host = "192.168.0.200:1880"; // computer IP
 String url = "/update-sensors"; 
 const int httpPort = 80;
 
-void connectToWifi(String login, String password)
-{
+int counter = 20;
+
+boolean connectToWifi(String login, String password)
+{  
   WiFi.persistent(false);
   WiFi.mode(WIFI_OFF);
   WiFi.mode(WIFI_STA);
@@ -21,6 +23,12 @@ void connectToWifi(String login, String password)
   while (WiFi.status() != WL_CONNECTED) {
     delay(500);
     Serial.print(".");
+    if (counter == 0) {
+      Serial.println();
+      return false;
+    } else {
+      counter -= 1;
+    }
   }
 
   if (WiFi.status() == WL_CONNECTED) {
@@ -28,7 +36,9 @@ void connectToWifi(String login, String password)
     Serial.println("IP address: ");
     Serial.println(WiFi.localIP());
     Serial.println();
+    return true;
   }
+  return false;
 }
 
 String getTime()
