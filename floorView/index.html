@@ -10,31 +10,49 @@
     <object data="floor.svg" id="floorsvg"></object>
 </body>
 <script type="text/javascript">
-    const ids = ['701', '702', '703', '704', '705', '706', '707', '708', '709', '710'];
-    const colors = [
-        { title: "freeze", fill: '#0A3AFC'},
-        { title: "cold", fill: '#2996FE'}, 
-        { title: "normal", fill: '#FFFFFF'},
-        { title: "hot", fill: '#FCB60A'},
-        { title: "heat", fill: '#FC240A'},
-    ];
+    const ids = ['701', '702', '703', '704', '705', '706', '707', '708', '709', '710', 'wc_w', 'wc_m'];
+    const colors = {
+        freeze: '#0A3AFC',
+        cold: '#2996FE', 
+        normal: '#27B102',
+        hot: '#FCB60A',
+        heat: '#FC240A',
+    };
 
     function setColorToRoom(roomId, color) {
         let svgItem = document.getElementById('floorsvg');
         svgItem.addEventListener('load', () => {
             let svgDoc = svgItem.contentDocument;
             let currentRoom = svgDoc.getElementById(roomId);
-            currentRoom.setAttribute("fill", color.fill);
+            currentRoom.setAttribute("fill", color);
         });
     }
 
-    setColorToRoom("708", colors.find(item => item.title === "hot"));
-    setColorToRoom("707", colors.find(item => item.title === "heat"));
-    setColorToRoom("706", colors.find(item => item.title === "freeze"));
-    setColorToRoom("705", colors.find(item => item.title === "freeze"));
-    setColorToRoom("704", colors.find(item => item.title === "cold"));
-    setColorToRoom("703", colors.find(item => item.title === "hot"));
-    setColorToRoom("702", colors.find(item => item.title === "cold"));
-    setColorToRoom("701", colors.find(item => item.title === "hot"));
+    function getColorFromTempValue(tempValue) {
+        if (tempValue <= -15) {
+            return colors.freeze;
+        } else if (tempValue >= -14 && tempValue <= 15) {
+            return colors.cold;
+        } else if (tempValue >= 16 && tempValue <= 23) {
+            return colors.normal;
+        } else if (tempValue >= 24 && tempValue <= 38) {
+            return colors.hot;
+        } else {
+            return colors.heat;
+        }
+    }
+
+    setColorToRoom("710", getColorFromTempValue(-18));
+    setColorToRoom("709", getColorFromTempValue(32));
+    setColorToRoom("708", getColorFromTempValue(25));
+    setColorToRoom("707", getColorFromTempValue(60));
+    setColorToRoom("706", getColorFromTempValue(22));
+    setColorToRoom("705", getColorFromTempValue(55));
+    setColorToRoom("704", getColorFromTempValue(21));
+    setColorToRoom("703", getColorFromTempValue(55));
+    setColorToRoom("702", getColorFromTempValue(-12));
+    setColorToRoom("701", getColorFromTempValue(30));
+    setColorToRoom("wc_w", getColorFromTempValue(20));
+    setColorToRoom("wc_m", getColorFromTempValue(20));
 </script>
 </html>
