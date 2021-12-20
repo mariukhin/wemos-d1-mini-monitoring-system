@@ -12,11 +12,9 @@
 <script type="text/javascript">
     const ids = ['701', '702', '703', '704', '705', '706', '707', '708', '709', '710', 'wc_w', 'wc_m'];
     const colors = {
-        freeze: '#0A3AFC',
-        cold: '#2996FE', 
+        cold: '#0A3AFC',
         normal: '#27B102',
-        hot: '#FCB60A',
-        heat: '#FC240A',
+        hot: '#FC240A',
     };
 
     function setColorToRoom(roomId, color) {
@@ -29,16 +27,12 @@
     }
 
     function getColorFromTempValue(tempValue) {
-        if (tempValue <= -15) {
-            return colors.freeze;
-        } else if (tempValue >= -14 && tempValue <= 15) {
+        if (tempValue <= 15) {
             return colors.cold;
         } else if (tempValue >= 16 && tempValue <= 23) {
             return colors.normal;
-        } else if (tempValue >= 24 && tempValue <= 38) {
-            return colors.hot;
         } else {
-            return colors.heat;
+            return colors.hot;
         }
     }
 
